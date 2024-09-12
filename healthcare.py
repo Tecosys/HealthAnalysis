@@ -74,44 +74,7 @@ with col1:
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    if st.button("Analyze Nutrition"):
-        input_prompt = """
-        You are an expert nutritionist tasked with analyzing food items in an image.
-        Calculate the calories, proteins, fat and Others provide a detailed report like this format:
-
-        Always start with **Ingredients**
-        
-        Here is one format format -
-
-        **Ingredients**
-        [List of estimated ingredients]
-
-        **Calories**
-        [Name of the ingredients] - [Number of Total Calories]
- 
-        **Protein**
-        [Name of the ingredients] - [Number of Total Proteins]
-
-        **Fat**
-        [Name of the ingredients] - [Number of Total Fat]
-
-        **Others**
-        [List of others ingredients]
-
-        \n**Total Calories**  - 
-        \n**Total Proteins** -   
-        \n**Fat Estimated** -
-
-        **Important Notes**
-        [Two small paragraph of the total food analysis]
-
-        **Disclaimer**
-        AI can make mistakes, the analysis might not be correct.
-        """
-        image_data = input_image_setup(uploaded_file)
-        response = get_gemini_response(input_prompt, image_data, input)
-        st.subheader("Nutrition Analysis")
-        st.write(response)
+    analyze_nutrition = st.button("Analyze Nutrition")
 
 # --- Report Analysis Card ---
 with col2:
@@ -122,28 +85,69 @@ with col2:
         # Process report file (assumed to be handled in another function)
         st.write("Report uploaded successfully!")
     
-    if st.button("Analyze Report"):
-        report_prompt = """
-        You are a healthcare expert analyzing a medical report.
-        Extract key information such as patient report biomarkers, treatment plan, and observation.
-        """
-        # Simulate report analysis (integration with the Gemini API or another module)
-        image_data1 = input_image_setup(uploaded_report)
-        report_response = get_gemini_response(report_prompt, image_data1, input)
-        st.subheader("Report Summary")
-        st.write(report_response)
+    analyze_report = st.button("Analyze Report")
+    calculate_risk = st.button("Calculate Risk Factors")
 
-    # Risk Factor Calculator
-    if st.button("Calculate Risk Factors"):
-        risk_factor_prompt = """
-        Based on the patient's report, identify and calculate the risk factors.
-        Don't estimate any risk that is not associated with the report. Make the risk factors clear, small and concise.
-        Include risks related to heart disease, diabetes, and any other conditions found in the report.
-        """
-        image_data2 = input_image_setup(uploaded_report)
-        risk_response = get_gemini_response(risk_factor_prompt, image_data2, input)
-        st.subheader("Risk Factor Analysis")
-        st.write(risk_response)
+# Results section (full width)
+if analyze_nutrition and uploaded_file is not None:
+    input_prompt = """
+    You are an expert nutritionist tasked with analyzing food items in an image.
+    Calculate the calories, proteins, fat and Others provide a detailed report like this format:
+
+    Always start with **Ingredients**
+    
+    Here is one format format -
+
+    **Ingredients**
+    [List of estimated ingredients]
+
+    **Calories**
+    [Name of the ingredients] - [Number of Total Calories]
+
+    **Protein**
+    [Name of the ingredients] - [Number of Total Proteins]
+
+    **Fat**
+    [Name of the ingredients] - [Number of Total Fat]
+
+    **Others**
+    [List of others ingredients]
+
+    \n**Total Calories**  - 
+    \n**Total Proteins** -   
+    \n**Fat Estimated** -
+
+    **Important Notes**
+    [Two small paragraph of the total food analysis]
+
+    **Disclaimer**
+    AI can make mistakes, the analysis might not be correct.
+    """
+    image_data = input_image_setup(uploaded_file)
+    response = get_gemini_response(input_prompt, image_data, input)
+    st.subheader("Nutrition Analysis")
+    st.write(response)
+
+if analyze_report and uploaded_report is not None:
+    report_prompt = """
+    You are a healthcare expert analyzing a medical report.
+    Extract key information such as patient report biomarkers, treatment plan, and observation.
+    """
+    image_data1 = input_image_setup(uploaded_report)
+    report_response = get_gemini_response(report_prompt, image_data1, input)
+    st.subheader("Report Summary")
+    st.write(report_response)
+
+if calculate_risk and uploaded_report is not None:
+    risk_factor_prompt = """
+    Based on the patient's report, identify and calculate the risk factors.
+    Don't estimate any risk that is not associated with the report. Make the risk factors clear, small and concise.
+    Include risks related to heart disease, diabetes, and any other conditions found in the report.
+    """
+    image_data2 = input_image_setup(uploaded_report)
+    risk_response = get_gemini_response(risk_factor_prompt, image_data2, input)
+    st.subheader("Risk Factor Analysis")
+    st.write(risk_response)
 
 # --- Virtual Healthcare Assistant ---
 st.markdown("<hr>", unsafe_allow_html=True)
@@ -185,7 +189,9 @@ if not st.session_state.virtual_assistant_data['initial_problem']:
             User's health concern: {initial_problem}
 
             Analyze the user's concern and provide appropriate health-related guidance. 
-            Ask follow-up questions if needed for more clarity.
+            If the concern is not clear, ask follow-up questions only.
+            Or if the concern is not related to health, say "It's not related to health concern, please visit a doctor for further assistance."
+            Or if the concern is emergency, say "It's an emergency, please visit a doctor immediately."
             """
             initial_response = completions.create(initial_prompt)
             st.session_state.virtual_assistant_data['chat_history'].append(("Initial Problem", initial_problem))
@@ -216,6 +222,9 @@ if st.session_state.virtual_assistant_data['initial_problem']:
             
             Provide a response based on the previous context and the new input. 
             Ask follow-up questions if needed for more clarity.
+            Or if the concern is not related to health, say "It's not related to health concern, I can only assist with health related concerns."
+            Or if the concern is vital or serious, say "It could be a serious concern, please visit a doctor immediately."
+            If there is no follow-up questions, just say "Thank you for using Tecosys Virtual Healthcare Assistant!"
             """
             
             chat_response = completions.create(chat_prompt)
