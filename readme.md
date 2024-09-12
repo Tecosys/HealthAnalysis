@@ -36,4 +36,4 @@ Email: info@tecosys.in
 
 ## Author
 
-@ Avishek Bhattacharjee - [View More]("https://avishek.info/home")
+@ Avishek Bhattacharjee
