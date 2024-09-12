@@ -7,7 +7,7 @@ from cerina import Completion
 
 # Load environment variables
 load_dotenv()
-completions=Completion()
+completions = Completion()
 
 # Configure Google Gemini API
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -33,7 +33,7 @@ def input_image_setup(uploaded_file):
         return image_parts
     else:
         raise FileNotFoundError("No file uploaded")
-    
+
 def navigate_to_new_page(title, content):
     st.title(title)
     st.write(content)
@@ -56,7 +56,6 @@ st.markdown("""
 st.header("Report Management App")
 
 col1, col2 = st.columns(2)
-
 
 if 'page' not in st.session_state:
     st.session_state.page = 'main'
@@ -107,42 +106,11 @@ with col1:
         [Two small paragraph of the total food analysis]
 
         **Disclaimer**
-        ...
-        For an example to understand better:
-
-        **Ingradients**
-        1. Basmati Rice - 200gm (estimated)
-        2. Mutton - 150gm (estimated)
-
-        **Calories**
-        - Basmati Rice - 300-350gm calcories (estimated)
- 
-        **Protein**
-        - Basmati Rice - 50gm proteins (estimated)
-
-        **Fat**
-        - Basmati Rice - 123gm fat (estimated)
-
-        **Others**
-        - Food Colour Noticed
-
-        \n**Total Calories**  - 350gm (High Calories)
-        \n**Total Proteins** -  50gm (Average)
-        \n**Fat Estimated** -   123gm (High Fat)
-        
-        **Important Notes**
-
-        According to the analysis, it is observed that user is taking huge calories and biriyani is often considered
-        as un-helathy food.
-
-        Before taking such food, make sure to take plenty of water and Don't take such food regularly
-
-        **Disclaimer**
         AI can make mistakes, the analysis might not be correct.
         """
         image_data = input_image_setup(uploaded_file)
         response = get_gemini_response(input_prompt, image_data, input)
-        st.subheader("Neutrition Analysis")
+        st.subheader("Nutrition Analysis")
         st.write(response)
 
 # --- Report Analysis Card ---
@@ -177,34 +145,82 @@ with col2:
         st.subheader("Risk Factor Analysis")
         st.write(risk_response)
 
-# --- Chat with Prescription Bot Card ---
-# Second Row: Virtual Healthcare Assistant
-
-# Second Row: Virtual Healthcare Assistant
+# --- Virtual Healthcare Assistant ---
 st.markdown("<hr>", unsafe_allow_html=True)
 st.subheader("Virtual Healthcare Assistant")
 
-# Form for Virtual Healthcare Assistant input
-with st.form(key="virtual_assistant_form"):
-    user_age = st.text_input("Enter your age")
-    family_history = st.text_input("Any family history (heart, diabetes, no)?")
-    diabetic_status = st.radio("Do you have diabetes?", ("Yes", "No"))
-    user_question = st.text_area("Ask a health-related question")
-    
-    submit_button = st.form_submit_button(label="Chat")
-    
-if submit_button:
-    chat_prompt = f"""
-    You are a virtual healthcare assistant.
-    Age: {user_age}
-    Family History: {family_history}
-    Diabetes Status: {diabetic_status}
-    User Question: {user_question}
+# Initialize session state for virtual assistant
+if 'virtual_assistant_data' not in st.session_state:
+    st.session_state.virtual_assistant_data = {
+        'age': "",
+        'family_history': "",
+        'diabetic_status': "",
+        'initial_problem': "",
+        'chat_history': []
+    }
 
-    Analyze the user's question and provide appropriate health-related guidance with some common risk alerts.
-    """
-    chat_response = completions.create(chat_prompt)
-    navigate_to_new_page("Virtual Healthcare Assistant", chat_response)
+# Initial form for user details
+if not st.session_state.virtual_assistant_data['initial_problem']:
+    with st.form("user_details_form"):
+        age = st.text_input("Enter your age")
+        family_history = st.text_input("Any family history (Father, Mother, Blood Relation, no)?")
+        diabetic_status = st.radio("Do you have diabetes?", ("Yes", "No"))
+        initial_problem = st.text_area("Describe your health concern or question")
+        submit_button = st.form_submit_button("Submit")
+        
+        if submit_button:
+            st.session_state.virtual_assistant_data.update({
+                'age': age,
+                'family_history': family_history,
+                'diabetic_status': diabetic_status,
+                'initial_problem': initial_problem
+            })
+            
+            # Generate initial response
+            initial_prompt = f"""
+            You are a virtual healthcare assistant.
+            Age: {age}
+            Family History: {family_history}
+            Diabetes Status: {diabetic_status}
+            User's health concern: {initial_problem}
+
+            Analyze the user's concern and provide appropriate health-related guidance. 
+            Ask follow-up questions if needed for more clarity.
+            """
+            initial_response = completions.create(initial_prompt)
+            st.session_state.virtual_assistant_data['chat_history'].append(("Initial Problem", initial_problem))
+            st.session_state.virtual_assistant_data['chat_history'].append(("Assistant", initial_response))
+            st.rerun()
+
+# Display chat history
+for role, message in st.session_state.virtual_assistant_data['chat_history']:
+    if role == "Initial Problem":
+        st.text(f"You: {message}")
+    elif role == "You":
+        st.text(f"You: {message}")
+    else:
+        st.markdown(f"**Assistant:** {message}")
+
+# Chat input for follow-up questions
+if st.session_state.virtual_assistant_data['initial_problem']:
+    user_input = st.text_input("Your response or follow-up question:")
+    if st.button("Send"):
+        if user_input:
+            st.session_state.virtual_assistant_data['chat_history'].append(("You", user_input))
+            
+            chat_prompt = f"""
+            Previous conversation:
+            {' '.join([f'{role}: {msg}' for role, msg in st.session_state.virtual_assistant_data['chat_history']])}
+            
+            User's new input: {user_input}
+            
+            Provide a response based on the previous context and the new input. 
+            Ask follow-up questions if needed for more clarity.
+            """
+            
+            chat_response = completions.create(chat_prompt)
+            st.session_state.virtual_assistant_data['chat_history'].append(("Assistant", chat_response))
+            st.rerun()
 
 # Footer
 st.write("Made with ❤️ Tecosys by Avishek")
