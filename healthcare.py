@@ -220,7 +220,7 @@ if st.session_state.virtual_assistant_data['initial_problem']:
             
             User's new input: {user_input}
             
-            Provide a response based on the previous context and the new input. 
+            Provide a short and concise response based on the previous context and the new input.
             Ask follow-up questions if needed for more clarity.
             Or if the concern is not related to health, say "It's not related to health concern, I can only assist with health related concerns."
             Or if the concern is vital or serious, mention the suspected problems and tell "It could be a serious concern, please visit a doctor immediately."
