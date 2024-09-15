@@ -191,7 +191,7 @@ if not st.session_state.virtual_assistant_data['initial_problem']:
             Analyze the user's concern and provide appropriate health-related guidance. 
             If the concern is not clear, ask follow-up questions only.
             Or if the concern is not related to health, say "It's not related to health concern, please visit a doctor for further assistance."
-            Or if the concern is emergency, say "It's an emergency, please visit a doctor immediately."
+            Or if the concern is emergency, mention the suspected problems and tell "It's an emergency, please visit a doctor immediately."
             """
             initial_response = completions.create(initial_prompt)
             st.session_state.virtual_assistant_data['chat_history'].append(("Initial Problem", initial_problem))
@@ -223,7 +223,7 @@ if st.session_state.virtual_assistant_data['initial_problem']:
             Provide a response based on the previous context and the new input. 
             Ask follow-up questions if needed for more clarity.
             Or if the concern is not related to health, say "It's not related to health concern, I can only assist with health related concerns."
-            Or if the concern is vital or serious, say "It could be a serious concern, please visit a doctor immediately."
+            Or if the concern is vital or serious, mention the suspected problems and tell "It could be a serious concern, please visit a doctor immediately."
             If there is no follow-up questions, just say "Thank you for using Tecosys Virtual Healthcare Assistant!"
             """
             
