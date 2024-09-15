@@ -191,7 +191,7 @@ if not st.session_state.virtual_assistant_data['initial_problem']:
             Analyze the user's concern and provide appropriate health-related guidance. 
             If the concern is not clear, ask follow-up questions only.
             Or if the concern is not related to health, say "It's not related to health concern, please visit a doctor for further assistance."
-            Or if the concern is emergency, mention the suspected problems and tell "It's an emergency, please visit a doctor immediately."
+            Or if the concern is emergency like taking poisons, snake bites, symptoms of cancer, tumours or any serious issue, mention the suspected Review of Symptoms(ROS) and inform "It might be an emergency concern, Don't neglect your issues. please visit a doctor immediately."
             """
             initial_response = completions.create(initial_prompt)
             st.session_state.virtual_assistant_data['chat_history'].append(("Initial Problem", initial_problem))
