@@ -232,4 +232,4 @@ if st.session_state.virtual_assistant_data['initial_problem']:
             st.rerun()
 
 # Footer
-st.write("Made with ❤️ Tecosys by Avishek")
+st.write("Made with ❤️ by Avishek")
